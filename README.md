@@ -260,6 +260,6 @@ Open the URL Vite prints (usually <http://localhost:5173>). No environment varia
 
 <div align="center">
 
-Built with [TanStack](https://tanstack.com), [shadcn/ui](https://ui.shadcn.com) and [Recharts](https://recharts.org).
+
 
 </div>
