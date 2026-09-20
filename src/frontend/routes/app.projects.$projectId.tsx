@@ -12,8 +12,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import { getProject, getSpace, projects } from "@/backend/lib/demo-data";
+import { useStudyStore, studyStore } from "@/backend/lib/store";
 import { ProgressBar } from "@/frontend/components/app/primitives";
 import { cn } from "@/backend/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/projects/$projectId")({
   loader: ({ params }) => {
@@ -44,8 +46,13 @@ const projectNav = [
 ];
 
 function ProjectLayout() {
-  const { project, space } = Route.useLoaderData();
+  const { project: loaderProject, space } = Route.useLoaderData();
   const { pathname } = useLocation();
+  const store = useStudyStore();
+
+  const project = store.projects.find((p) => p.id === loaderProject.id) ?? loaderProject;
+  const projectMaterialsCount = store.materials.filter((m) => m.projectId === project.id).length;
+  const isDemoMode = store.dataMode === "demo";
 
   // Determine active tab from URL: /app/projects/:id(/<slug>)?
   const match = pathname.match(/\/app\/projects\/[^/]+(?:\/([^/]+))?/);
@@ -82,6 +89,30 @@ function ProjectLayout() {
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                 <Sparkles className="size-3" /> Isolated Context
               </span>
+
+              {/* Data Mode Switcher */}
+              <button
+                type="button"
+                onClick={() => {
+                  const newMode = isDemoMode ? "live" : "demo";
+                  studyStore.setDataMode(newMode);
+                  toast.info(
+                    newMode === "live"
+                      ? "Switched to Live Learning (0% clean slate). All metrics now reflect your real actions!"
+                      : "Switched to Demo Data Mode.",
+                  );
+                }}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold border transition-all cursor-pointer",
+                  isDemoMode
+                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20"
+                    : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20",
+                )}
+                title="Click to toggle between Live Genuine Progress and Demo Data"
+              >
+                <span className={cn("size-1.5 rounded-full", isDemoMode ? "bg-amber-500" : "bg-emerald-500")} />
+                {isDemoMode ? "Demo Mode (Click to start fresh 0%)" : "Live Progress (Authentic)"}
+              </button>
             </div>
 
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
@@ -107,7 +138,7 @@ function ProjectLayout() {
             <div className="h-8 w-px bg-border" />
             <div>
               <p className="text-xs text-muted-foreground">Materials</p>
-              <p className="font-display text-lg font-bold text-foreground">{project.materials}</p>
+              <p className="font-display text-lg font-bold text-foreground">{projectMaterialsCount}</p>
             </div>
           </div>
         </div>

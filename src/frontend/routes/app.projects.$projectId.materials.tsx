@@ -359,8 +359,32 @@ export function ProjectMaterialsTab() {
       <SectionCard
         title={`Uploaded Documents (${projectMaterials.length})`}
         description="All documents are processed and indexed into vector embeddings for citation tracing."
+        action={
+          projectMaterials.length > 0 ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                studyStore.clearMaterials(project.id);
+                toast.success("Cleared materials. Ready for fresh uploads!");
+              }}
+              className="text-xs text-muted-foreground hover:text-destructive gap-1"
+            >
+              <Trash2 className="size-3" /> Clear Materials
+            </Button>
+          ) : undefined
+        }
       >
         <div className="space-y-4">
+          {projectMaterials.length === 0 ? (
+            <div className="text-center py-10 rounded-xl border border-dashed border-border bg-muted/20">
+              <FileText className="size-8 text-muted-foreground/50 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-foreground">No materials uploaded yet</p>
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1">
+                Upload a PDF or image above to start generating quizzes and grounding the AI Tutor.
+              </p>
+            </div>
+          ) : null}
           {projectMaterials.map((mat) => (
             <div
               key={mat.id}
@@ -436,10 +460,21 @@ export function ProjectMaterialsTab() {
                       </Link>
                     </>
                   ) : (
-                    <span className="text-xs text-muted-foreground italic flex items-center gap-1.5">
-                      <Loader2 className="size-3 animate-spin" /> {pipelineStage}
+                    <span className="text-xs text-muted-foreground italic flex items-center gap-1.5 bg-muted px-2.5 py-1 rounded-md">
+                      <Loader2 className="size-3 animate-spin" /> Ingestion in progress ({mat.progress}%)
                     </span>
                   )}
+
+                  <button
+                    onClick={() => {
+                      studyStore.deleteMaterial(mat.id);
+                      toast.success(`Removed "${mat.name}"`);
+                    }}
+                    className="text-muted-foreground hover:text-destructive p-1.5 rounded-lg border border-border hover:border-destructive/30 transition-colors ml-1"
+                    title="Delete document"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
                 </div>
               </div>
 

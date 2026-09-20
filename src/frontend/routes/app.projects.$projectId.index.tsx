@@ -58,7 +58,9 @@ function ProjectOverviewTab() {
           </div>
           <div className="flex w-full justify-around border-t border-border pt-4 text-xs text-muted-foreground">
             <div>
-              <p className="font-semibold text-foreground">{project.materials}</p>
+              <p className="font-semibold text-foreground">
+                {store.materials.filter((m) => m.projectId === project.id).length}
+              </p>
               <span>Uploaded PDFs</span>
             </div>
             <div className="h-6 w-px bg-border" />

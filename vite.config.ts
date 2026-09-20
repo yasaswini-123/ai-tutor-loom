@@ -11,11 +11,13 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/backend/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "backend/server" },
-  },
-  tanstackRouter: {
-    // Routes moved to src/frontend/routes/ — tell TanStack Router plugin where to scan
-    routesDirectory: "./src/frontend/routes",
-    generatedRouteTree: "./src/routeTree.gen.ts",
+    router: {
+      // Router moved to src/frontend/router.tsx
+      entry: "frontend/router",
+      // Routes moved to src/frontend/routes/ — override default 'routes' scan dir
+      routesDirectory: "frontend/routes",
+      generatedRouteTree: "routeTree.gen.ts",
+    },
   },
 });
 

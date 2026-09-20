@@ -95,9 +95,10 @@ export interface AppStoreState {
   backgroundJobs: BackgroundJob[];
   quizSessions?: QuizSessionRecord[];
   questionAnswersCount?: Record<string, number>; // keyed by projectId or "global"
+  dataMode?: "live" | "demo";
 }
 
-const STORAGE_KEY = "ai_study_companion_storage_v3";
+const STORAGE_KEY = "ai_study_companion_storage_v4";
 
 // Initial seed summaries for initial documents
 const initialSummaries: Record<string, DocumentSummary> = {
@@ -171,6 +172,33 @@ const initialTutorSeed: Record<string, TutorMessage[]> = {
   ],
 };
 
+export function getFreshProjects(): Project[] {
+  return defaultProjects.map((p) => ({
+    ...p,
+    progress: 0,
+    mastery: 0,
+    materials: 0,
+    lastActivity: "Not started yet",
+    recentMistake: "No mistakes recorded yet. Take an adaptive quiz to identify weak areas.",
+    concepts: p.concepts.map((c) => ({
+      ...c,
+      mastery: 0,
+      trend: "stable",
+      lastPracticed: "Never",
+      history: [],
+      mistakes: [],
+    })),
+  }));
+}
+
+export function getFreshSpaces(): Space[] {
+  return defaultSpaces.map((s) => ({
+    ...s,
+    progress: 0,
+    lastActivity: "Clean slate",
+  }));
+}
+
 function getInitialState(): AppStoreState {
   if (typeof window === "undefined") {
     return {
@@ -185,6 +213,7 @@ function getInitialState(): AppStoreState {
       backgroundJobs: defaultJobs,
       quizSessions: [],
       questionAnswersCount: {},
+      dataMode: "demo",
     };
   }
 
@@ -197,6 +226,7 @@ function getInitialState(): AppStoreState {
           ...parsed,
           quizSessions: Array.isArray(parsed.quizSessions) ? parsed.quizSessions : [],
           questionAnswersCount: parsed.questionAnswersCount || {},
+          dataMode: parsed.dataMode || "demo",
         };
       }
     }
@@ -216,6 +246,7 @@ function getInitialState(): AppStoreState {
     backgroundJobs: defaultJobs,
     quizSessions: [],
     questionAnswersCount: {},
+    dataMode: "demo",
   };
 }
 
@@ -256,8 +287,44 @@ export const studyStore = {
       backgroundJobs: defaultJobs,
       quizSessions: [],
       questionAnswersCount: {},
+      dataMode: "demo",
     };
     notify();
+  },
+
+  resetToFresh() {
+    currentState = {
+      user: currentState.user || defaultUser,
+      spaces: getFreshSpaces(),
+      projects: getFreshProjects(),
+      materials: [],
+      summaries: {},
+      quizzes: { "ml-fundamentals": defaultQuizQuestions },
+      tutorMessages: {},
+      activity: [
+        {
+          id: `act-${Date.now()}`,
+          type: "project_created",
+          title: "Fresh Learning Workspace initialized",
+          project: "All Projects",
+          detail: "All progress reset to 0%. Complete quizzes and upload materials to record genuine results.",
+          time: "Just now",
+        },
+      ],
+      backgroundJobs: [],
+      quizSessions: [],
+      questionAnswersCount: {},
+      dataMode: "live",
+    };
+    notify();
+  },
+
+  setDataMode(mode: "live" | "demo") {
+    if (mode === "live") {
+      this.resetToFresh();
+    } else {
+      this.resetDefaults();
+    }
   },
 
   // Auth actions
@@ -1453,10 +1520,36 @@ export const studyStore = {
 
     const existingSessions = currentState.quizSessions || [];
 
+    // Also update project progress dynamically based on completed sessions
+    const projectSessions = [newSession, ...existingSessions.filter(s => s.projectId === projectId)];
+    const avgScore = Math.round(projectSessions.reduce((acc, s) => acc + s.scorePercent, 0) / projectSessions.length);
+    const newProgress = Math.min(100, Math.round(projectSessions.length * 20 + avgScore * 0.3));
+
+    const updatedProjects = currentState.projects.map((p) =>
+      p.id === projectId ? { ...p, progress: Math.max(p.progress, newProgress), mastery: avgScore } : p
+    );
+
     currentState = {
       ...currentState,
+      projects: updatedProjects,
       quizSessions: [newSession, ...existingSessions],
       activity: [quizAct, ...currentState.activity],
+    };
+    notify();
+  },
+
+  deleteMaterial(materialId: string) {
+    currentState = {
+      ...currentState,
+      materials: currentState.materials.filter((m) => m.id !== materialId),
+    };
+    notify();
+  },
+
+  clearMaterials(projectId?: string) {
+    currentState = {
+      ...currentState,
+      materials: projectId ? currentState.materials.filter((m) => m.projectId !== projectId) : [],
     };
     notify();
   },

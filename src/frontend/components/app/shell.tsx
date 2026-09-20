@@ -22,6 +22,7 @@ import {
   Bell,
   FileText,
   LogOut,
+  RotateCcw,
 } from "lucide-react";
 import { studyStore, useStudyStore } from "@/backend/lib/store";
 import { Button } from "@/frontend/components/ui/button";
@@ -174,6 +175,31 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         ) : null}
         <NavItem to="/app/settings" label="Settings" icon={Settings} active={pathname === "/app/settings"} onClick={onNavigate} />
         <NavItem to="/app/help" label="Help" icon={CircleHelp} active={pathname === "/app/help"} onClick={onNavigate} />
+
+        {/* Data Mode & Clean Slate Controller */}
+        <div className="pt-2 pb-1">
+          <button
+            type="button"
+            onClick={() => {
+              const nextMode = store.dataMode === "demo" ? "live" : "demo";
+              studyStore.setDataMode(nextMode);
+            }}
+            className={cn(
+              "w-full flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium border transition-colors",
+              store.dataMode === "live"
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
+                : "bg-muted/60 text-muted-foreground border-border hover:text-foreground hover:bg-muted",
+            )}
+          >
+            <span className="flex items-center gap-1.5 truncate">
+              <RotateCcw className="size-3 shrink-0" />
+              <span>{store.dataMode === "live" ? "Live (0% Baseline)" : "Demo Mode"}</span>
+            </span>
+            <span className="text-[10px] font-semibold underline underline-offset-2 shrink-0">
+              {store.dataMode === "live" ? "Reset" : "Start 0%"}
+            </span>
+          </button>
+        </div>
         <div className="mt-2 flex items-center justify-between gap-2 rounded-lg px-3 py-2 bg-muted/30">
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
