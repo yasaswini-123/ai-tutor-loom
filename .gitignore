@@ -44,3 +44,20 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Assignment / Private Files
+AGENTS.md
+assignment/
+assignments/
+challenge/
+instructions/
+evaluation/
+evaluator/
+submission/
+
+# Temporary / Local Files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
